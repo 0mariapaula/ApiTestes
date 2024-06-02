@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, Button, FlatList, ActivityIndicator } from 'react-native';
 import axios from 'axios';
 
-const API_KEY = 'AIzaSyBE29t3XlDV14ydAClj2bL9aUzxVZwplD4'; // Substitua pela sua chave de API do Google Places
+const API_KEY = 'AIzaSyAACgV5Ok9n-HsESqMo9d8cRGAiHFlOEAY'; // Substitua pela sua chave de API do Google Places
 
 interface Place {
   place_id: string;
@@ -43,6 +43,7 @@ const SearchScreen = () => {
 
   return (
     <View style={styles.container}>
+      
       <Text style={styles.title}>Tela de Pesquisa</Text>
       <TextInput
         style={styles.input}
@@ -71,6 +72,7 @@ const SearchScreen = () => {
 
 const styles = StyleSheet.create({
   container: {
+    margin:30,
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',

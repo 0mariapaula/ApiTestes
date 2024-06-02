@@ -24,6 +24,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     backgroundColor: '#fff',
+    
   },
   title: {
     fontSize: 24,
@@ -39,6 +40,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     marginBottom: 15,
     backgroundColor: '#f9f9f9',
+    
   },
 });
 
