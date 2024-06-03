@@ -30,6 +30,10 @@ const SearchScreen = () => {
       console.log('Resposta da API:', response.data);
       if (response.data.status === 'OK') {
         setResults(response.data.results);
+        // Adiciona log de cada item nos resultados de forma organizada
+        response.data.results.forEach((item: Place) => {
+          console.log('Resultado:', JSON.stringify(item, null, 2));
+        });
       } else {
         console.error('Erro na resposta da API:', response.data.status);
         alert(`Erro na pesquisa: ${response.data.status}`);
@@ -43,7 +47,6 @@ const SearchScreen = () => {
 
   return (
     <View style={styles.container}>
-      
       <Text style={styles.title}>Tela de Pesquisa</Text>
       <TextInput
         style={styles.input}
