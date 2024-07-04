@@ -1,19 +1,16 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, Button, FlatList, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Button, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
 import axios from 'axios';
 
 const API_KEY = 'AIzaSyAACgV5Ok9n-HsESqMo9d8cRGAiHFlOEAY'; // Substitua pela sua chave de API do Google Places
 
-interface Place {
-  place_id: string;
-  name: string;
-  formatted_address: string;
-}
-
 const SearchScreen = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [results, setResults] = useState<Place[]>([]);
+  const [state, setState] = useState('');
+  const [city, setCity] = useState('');
+  const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
 
   const fetchPlaces = async () => {
     if (!searchQuery.trim()) {
@@ -23,15 +20,18 @@ const SearchScreen = () => {
 
     setLoading(true);
     try {
-      console.log(`Iniciando pesquisa para: ${searchQuery}`);
+      let query = `${searchQuery}`;
+      if (city) query += ` in ${city}`;
+      if (state) query += `, ${state}`;
+      
+      console.log(`Iniciando pesquisa para: ${query}`);
       const response = await axios.get(
-        `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${searchQuery}&key=${API_KEY}`
+        `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${query}&key=${API_KEY}`
       );
       console.log('Resposta da API:', response.data);
       if (response.data.status === 'OK') {
         setResults(response.data.results);
-        // Adiciona log de cada item nos resultados de forma organizada
-        response.data.results.forEach((item: Place) => {
+        response.data.results.forEach((item) => {
           console.log('Resultado:', JSON.stringify(item, null, 2));
         });
       } else {
@@ -54,6 +54,25 @@ const SearchScreen = () => {
         value={searchQuery}
         onChangeText={setSearchQuery}
       />
+      <TouchableOpacity style={styles.filterButton} onPress={() => setShowFilters(!showFilters)}>
+        <Text style={styles.filterButtonText}>Mostrar Filtros</Text>
+      </TouchableOpacity>
+      {showFilters && (
+        <>
+          <TextInput
+            style={styles.input}
+            placeholder="Digite a cidade..."
+            value={city}
+            onChangeText={setCity}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Digite o estado..."
+            value={state}
+            onChangeText={setState}
+          />
+        </>
+      )}
       <Button title="Pesquisar" onPress={fetchPlaces} />
       {loading ? (
         <ActivityIndicator size="large" color="#0000ff" />
@@ -75,7 +94,7 @@ const SearchScreen = () => {
 
 const styles = StyleSheet.create({
   container: {
-    margin:30,
+    margin: 30,
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
@@ -96,6 +115,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     marginBottom: 15,
     backgroundColor: '#f9f9f9',
+  },
+  filterButton: {
+    width: '100%',
+    padding: 15,
+    backgroundColor: '#007BFF',
+    borderRadius: 8,
+    marginBottom: 15,
+    alignItems: 'center',
+  },
+  filterButtonText: {
+    color: '#fff',
+    fontSize: 18,
   },
   resultItem: {
     padding: 10,
