@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, Button, FlatList, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Button, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
 import axios from 'axios';
 
-const API_KEY = 'AIzaSyAACgV5Ok9n-HsESqMo9d8cRGAiHFlOEAY'; // Substitua pela sua chave de API do Google Places
+const API_KEY = 'AIzaSyAACgV5Ok9n-HsESqMo9d8cRGAiHFlOEAY';
 
 const SearchScreen = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -30,9 +30,6 @@ const SearchScreen = () => {
       console.log('Resposta da API:', response.data);
       if (response.data.status === 'OK') {
         setResults(response.data.results);
-        response.data.results.forEach((item) => {
-          console.log('Resultado:', JSON.stringify(item, null, 2));
-        });
       } else {
         console.error('Erro na resposta da API:', response.data.status);
         alert(`Erro na pesquisa: ${response.data.status}`);
@@ -44,9 +41,23 @@ const SearchScreen = () => {
     }
   };
 
+  const handleResultPress = (item) => {
+    // Aqui você pode implementar o que deseja fazer ao clicar no resultado
+    console.log('Item selecionado:', item);
+    // Exemplo: navegação para a tela de detalhes ou outra ação
+    // navigation.navigate('DetalhesDoLocal', { local: item });
+  };
+
+  const renderItem = ({ item }) => (
+    <TouchableOpacity style={styles.resultItem} onPress={() => handleResultPress(item)}>
+      <Text style={styles.resultName}>{item.name}</Text>
+      <Text style={styles.resultAddress}>{item.formatted_address}</Text>
+    </TouchableOpacity>
+  );
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Tela de Pesquisa</Text>
+      <Text style={styles.title}>Pesquisa de Locais</Text>
       <TextInput
         style={styles.input}
         placeholder="Digite sua pesquisa..."
@@ -67,17 +78,12 @@ const SearchScreen = () => {
       />
       <Button title="Pesquisar" onPress={fetchPlaces} />
       {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
+        <ActivityIndicator size="large" color="#0000ff" style={styles.loadingIndicator} />
       ) : (
         <FlatList
           data={results}
           keyExtractor={(item) => item.place_id}
-          renderItem={({ item }) => (
-            <View style={styles.resultItem}>
-              <Text style={styles.resultText}>{item.name}</Text>
-              <Text style={styles.resultText}>{item.formatted_address}</Text>
-            </View>
-          )}
+          renderItem={renderItem}
         />
       )}
     </View>
@@ -86,35 +92,52 @@ const SearchScreen = () => {
 
 const styles = StyleSheet.create({
   container: {
-    margin:30,
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
-    backgroundColor: '#fff',
+    backgroundColor: '#f5f5f5',
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 20,
+    color: '#333',
   },
   input: {
     width: '100%',
     height: 50,
     borderWidth: 1,
-    borderColor: '#cccccc',
+    borderColor: '#ccc',
     borderRadius: 8,
-    paddingHorizontal: 10,
-    marginBottom: 15,
-    backgroundColor: '#f9f9f9',
+    paddingHorizontal: 15,
+    marginBottom: 20,
+    backgroundColor: '#fff',
+  },
+  loadingIndicator: {
+    marginTop: 20,
   },
   resultItem: {
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#cccccc',
+    padding: 15,
+    backgroundColor: '#fff',
+    marginBottom: 15,
+    borderRadius: 8,
+    width: '100%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 3,
   },
-  resultText: {
+  resultName: {
     fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 5,
+    color: '#333',
+  },
+  resultAddress: {
+    fontSize: 16,
+    color: '#666',
   },
 });
 
