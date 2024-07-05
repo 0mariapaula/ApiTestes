@@ -3,7 +3,7 @@ import { View, Text, TextInput, StyleSheet, Button, FlatList, ActivityIndicator,
 import axios from 'axios';
 import { Picker } from '@react-native-picker/picker';
 
-const API_KEY = 'AIzaSyAACgV5Ok9n-HsESqMo9d8cRGAiHFlOEAY';
+const API_KEY = 'AIzaSyAACgV5Ok9n-HsESqMo9d8cRGAiHFlOEAY'; // Substitua pela sua chave da API do Google Places
 
 const estados = [
   { label: 'Alagoas', value: 'AL' },
@@ -67,6 +67,7 @@ const SearchScreen = () => {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [nextPageToken, setNextPageToken] = useState('');
 
   const handleEstadoChange = (value) => {
     setEstado(value);
@@ -79,16 +80,16 @@ const SearchScreen = () => {
       alert('Por favor, insira um termo de pesquisa.');
       return;
     }
-
+  
     setLoading(true);
     try {
       let query = `${searchQuery}`;
       if (municipio) {
         query += ` in ${municipio}, ${estado}`;
-      } else if (estado) {
+      } else {
         query += ` in ${estado}`;
       }
-
+  
       console.log(`Iniciando pesquisa para: ${query}`);
       const response = await axios.get(
         `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${query}&key=${API_KEY}`
@@ -96,9 +97,7 @@ const SearchScreen = () => {
       console.log('Resposta da API:', response.data);
       if (response.data.status === 'OK') {
         setResults(response.data.results);
-        response.data.results.forEach((item) => {
-          console.log('Resultado:', JSON.stringify(item, null, 2));
-        });
+        setNextPageToken(response.data.next_page_token);
       } else {
         console.error('Erro na resposta da API:', response.data.status);
         alert(`Erro na pesquisa: ${response.data.status}`);
@@ -109,10 +108,34 @@ const SearchScreen = () => {
       setLoading(false);
     }
   };
+  
+
+  const loadMoreResults = async () => {
+    if (!nextPageToken) return;
+
+    setLoading(true);
+    try {
+      const response = await axios.get(
+        `https://maps.googleapis.com/maps/api/place/textsearch/json?pagetoken=${nextPageToken}&key=${API_KEY}`
+      );
+      console.log('Resposta da API (Próxima página):', response.data);
+      if (response.data.status === 'OK') {
+        setResults([...results, ...response.data.results]);
+        setNextPageToken(response.data.next_page_token);
+      } else {
+        console.error('Erro na resposta da API (Próxima página):', response.data.status);
+        alert(`Erro ao carregar mais resultados: ${response.data.status}`);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar mais resultados:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Pesquisar Locais</Text>
+      <Text style={styles.title}>Tela de Pesquisa</Text>
       <TextInput
         style={styles.input}
         placeholder="Digite sua pesquisa..."
@@ -150,16 +173,23 @@ const SearchScreen = () => {
       {loading ? (
         <ActivityIndicator size="large" color="#0000ff" style={styles.loadingIndicator} />
       ) : (
-        <FlatList
-          data={results}
-          keyExtractor={(item) => item.place_id}
-          renderItem={({ item }) => (
-            <View style={styles.resultItem}>
-              <Text style={styles.resultName}>{item.name}</Text>
-              <Text style={styles.resultAddress}>{item.formatted_address}</Text>
-            </View>
+        <>
+          <FlatList
+            data={results}
+            keyExtractor={(item) => item.place_id}
+            renderItem={({ item }) => (
+              <View style={styles.resultItem}>
+                <Text style={styles.resultName}>{item.name}</Text>
+                <Text style={styles.resultAddress}>{item.formatted_address}</Text>
+              </View>
+            )}
+          />
+          {nextPageToken && (
+            <TouchableOpacity style={styles.loadMoreButton} onPress={loadMoreResults}>
+              <Text style={styles.loadMoreButtonText}>Carregar mais resultados</Text>
+            </TouchableOpacity>
           )}
-        />
+        </>
       )}
     </View>
   );
@@ -173,7 +203,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     backgroundColor: '#fff',
-    paddingTop: 40, 
+    paddingTop: 40,
   },
   title: {
     fontSize: 24,
@@ -237,6 +267,18 @@ const styles = StyleSheet.create({
   resultAddress: {
     fontSize: 16,
     color: '#666',
+  },
+  loadMoreButton: {
+    backgroundColor: '#007bff',
+    padding: 15,
+    borderRadius: 8,
+    marginBottom: 20,
+    alignItems: 'center',
+  },
+  loadMoreButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 
