@@ -3,11 +3,9 @@ import { View, Text, TextInput, StyleSheet, Button, FlatList, ActivityIndicator,
 import axios from 'axios';
 import { Picker } from '@react-native-picker/picker';
 
-const API_KEY = 'AIzaSyAACgV5Ok9n-HsESqMo9d8cRGAiHFlOEAY'; // Substitua pela sua chave de API do Google Places
+const API_KEY = 'AIzaSyAACgV5Ok9n-HsESqMo9d8cRGAiHFlOEAY';
 
 const estados = [
-  { label: 'Alagoas', value: 'AL' },
-  { label: 'Bahia', value: 'BA' },
   { label: 'Alagoas', value: 'AL' },
   { label: 'Bahia', value: 'BA' },
   { label: 'Ceará', value: 'CE' },
@@ -85,9 +83,12 @@ const SearchScreen = () => {
     setLoading(true);
     try {
       let query = `${searchQuery}`;
-      if (municipio) query += ` in ${municipio}`;
-      if (estado) query += `, ${estado}`;
-      
+      if (municipio) {
+        query += ` in ${municipio}, ${estado}`;
+      } else if (estado) {
+        query += ` in ${estado}`;
+      }
+
       console.log(`Iniciando pesquisa para: ${query}`);
       const response = await axios.get(
         `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${query}&key=${API_KEY}`
@@ -111,7 +112,7 @@ const SearchScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Tela de Pesquisa</Text>
+      <Text style={styles.title}>Pesquisar Locais</Text>
       <TextInput
         style={styles.input}
         placeholder="Digite sua pesquisa..."
@@ -147,15 +148,15 @@ const SearchScreen = () => {
       )}
       <Button title="Pesquisar" onPress={fetchPlaces} />
       {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
+        <ActivityIndicator size="large" color="#0000ff" style={styles.loadingIndicator} />
       ) : (
         <FlatList
           data={results}
           keyExtractor={(item) => item.place_id}
           renderItem={({ item }) => (
             <View style={styles.resultItem}>
-              <Text style={styles.resultText}>{item.name}</Text>
-              <Text style={styles.resultText}>{item.formatted_address}</Text>
+              <Text style={styles.resultName}>{item.name}</Text>
+              <Text style={styles.resultAddress}>{item.formatted_address}</Text>
             </View>
           )}
         />
@@ -172,49 +173,70 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     backgroundColor: '#fff',
+    paddingTop: 40, 
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 20,
+    color: '#333',
   },
   input: {
     width: '100%',
     height: 50,
     borderWidth: 1,
-    borderColor: '#cccccc',
+    borderColor: '#ccc',
     borderRadius: 8,
-    paddingHorizontal: 10,
-    marginBottom: 15,
-    backgroundColor: '#f9f9f9',
+    paddingHorizontal: 15,
+    marginBottom: 20,
+    backgroundColor: '#fff',
   },
   filterButton: {
     width: '100%',
-    padding: 15,
-    backgroundColor: '#007BFF',
+    paddingVertical: 15,
+    backgroundColor: '#007bff',
     borderRadius: 8,
-    marginBottom: 15,
+    marginBottom: 20,
     alignItems: 'center',
   },
   filterButtonText: {
     color: '#fff',
     fontSize: 18,
+    fontWeight: 'bold',
   },
   picker: {
     width: '100%',
     height: 50,
     borderWidth: 1,
-    borderColor: '#cccccc',
+    borderColor: '#ccc',
     borderRadius: 8,
-    marginBottom: 15,
+    marginBottom: 20,
+    backgroundColor: '#fff',
+  },
+  loadingIndicator: {
+    marginTop: 20,
   },
   resultItem: {
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#cccccc',
+    padding: 15,
+    backgroundColor: '#fff',
+    marginBottom: 15,
+    borderRadius: 8,
+    width: '100%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 3,
   },
-  resultText: {
+  resultName: {
     fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 5,
+    color: '#333',
+  },
+  resultAddress: {
+    fontSize: 16,
+    color: '#666',
   },
 });
 
