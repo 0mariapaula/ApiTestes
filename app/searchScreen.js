@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, Button, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
 import axios from 'axios';
 
-const API_KEY = 'AIzaSyAACgV5Ok9n-HsESqMo9d8cRGAiHFlOEAY';
+const API_KEY = 'AIzaSyAACgV5Ok9n-HsESqMo9d8cRGAiHFlOEAY'; // Certifique-se de substituir pela sua própria chave API
 
-const SearchScreen = () => {
+const SearchScreen = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [state, setState] = useState('');
   const [city, setCity] = useState('');
@@ -42,10 +42,8 @@ const SearchScreen = () => {
   };
 
   const handleResultPress = (item) => {
-    // Aqui você pode implementar o que deseja fazer ao clicar no resultado
-    console.log('Item selecionado:', item);
-    // Exemplo: navegação para a tela de detalhes ou outra ação
-    // navigation.navigate('DetalhesDoLocal', { local: item });
+    console.log('Clicou no resultado:', item); // Adicionando console.log para debug
+    navigation.navigate('DetalhesDoLocal', { local: item });
   };
 
   const renderItem = ({ item }) => (

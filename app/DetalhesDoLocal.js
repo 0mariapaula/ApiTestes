@@ -1,9 +1,9 @@
-// DetalhesDoLocal.js
-
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
-const DetalhesDoLocal = ({ local }) => {
+const DetalhesDoLocal = ({ route }) => {
+  const { local } = route.params;
+
   return (
     <View style={styles.container}>
       <Text style={styles.name}>{local.name}</Text>
