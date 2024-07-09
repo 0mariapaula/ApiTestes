@@ -32,7 +32,7 @@ const estados = [
   { label: 'Tocantins', value: 'TO' },
 ];
 
-const municipiosPorEstado = {
+const municipiosPorEstado: Record<string, string[]> = {
   AL: ['Maceió', 'Arapiraca', 'Palmeira dos Índios'],
   BA: ['Salvador', 'Feira de Santana', 'Vitória da Conquista'],
   CE: ['Fortaleza', 'Caucaia', 'Juazeiro do Norte'],
@@ -59,17 +59,23 @@ const municipiosPorEstado = {
   TO: ['Palmas', 'Araguaína', 'Gurupi'],
 };
 
+interface Place {
+  place_id: string;
+  name: string;
+  formatted_address: string;
+}
+
 const SearchScreen = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [estado, setEstado] = useState('');
   const [municipio, setMunicipio] = useState('');
-  const [municipios, setMunicipios] = useState([]);
-  const [results, setResults] = useState([]);
+  const [municipios, setMunicipios] = useState<string[]>([]);
+  const [results, setResults] = useState<Place[]>([]);
   const [loading, setLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [nextPageToken, setNextPageToken] = useState('');
 
-  const handleEstadoChange = (value) => {
+  const handleEstadoChange = (value: string) => {
     setEstado(value);
     setMunicipios(municipiosPorEstado[value] || []);
     setMunicipio(''); // Reseta o município selecionado
@@ -80,7 +86,7 @@ const SearchScreen = () => {
       alert('Por favor, insira um termo de pesquisa.');
       return;
     }
-  
+
     setLoading(true);
     try {
       let query = `${searchQuery}`;
@@ -89,7 +95,7 @@ const SearchScreen = () => {
       } else {
         query += ` in ${estado}`;
       }
-  
+
       console.log(`Iniciando pesquisa para: ${query}`);
       const response = await axios.get(
         `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${query}&key=${API_KEY}`
@@ -108,7 +114,6 @@ const SearchScreen = () => {
       setLoading(false);
     }
   };
-  
 
   const loadMoreResults = async () => {
     if (!nextPageToken) return;
@@ -169,41 +174,36 @@ const SearchScreen = () => {
           </Picker>
         </>
       )}
-      <Button title="Pesquisar" onPress={fetchPlaces} />
-      {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" style={styles.loadingIndicator} />
-      ) : (
-        <>
-          <FlatList
-            data={results}
-            keyExtractor={(item) => item.place_id}
-            renderItem={({ item }) => (
-              <View style={styles.resultItem}>
-                <Text style={styles.resultName}>{item.name}</Text>
-                <Text style={styles.resultAddress}>{item.formatted_address}</Text>
-              </View>
-            )}
-          />
-          {nextPageToken && (
+      <Button title="Pesquisar" onPress={fetchPlaces} disabled={loading} />
+      {loading && <ActivityIndicator style={styles.loadingIndicator} size="large" color="#0000ff" />}
+      <FlatList
+        data={results}
+        keyExtractor={(item) => item.place_id}
+        renderItem={({ item }) => (
+          <View style={styles.resultItem}>
+            <Text style={styles.resultName}>{item.name}</Text>
+            <Text style={styles.resultAddress}>{item.formatted_address}</Text>
+          </View>
+        )}
+        ListFooterComponent={
+          nextPageToken ? (
             <TouchableOpacity style={styles.loadMoreButton} onPress={loadMoreResults}>
-              <Text style={styles.loadMoreButtonText}>Carregar mais resultados</Text>
+              <Text style={styles.loadMoreButtonText}>Carregar mais</Text>
             </TouchableOpacity>
-          )}
-        </>
-      )}
+          ) : null
+        }
+      />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    margin: 30,
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
-    backgroundColor: '#fff',
-    paddingTop: 40,
+    backgroundColor: '#f5f5f5',
   },
   title: {
     fontSize: 24,
@@ -269,15 +269,15 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   loadMoreButton: {
-    backgroundColor: '#007bff',
     padding: 15,
+    backgroundColor: '#007bff',
     borderRadius: 8,
-    marginBottom: 20,
     alignItems: 'center',
+    marginBottom: 20,
   },
   loadMoreButtonText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
   },
 });
