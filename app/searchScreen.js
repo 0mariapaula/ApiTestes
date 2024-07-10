@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, Button, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, TextInput, StyleSheet, Button, FlatList, ActivityIndicator, TouchableHighlight } from 'react-native';
 import axios from 'axios';
+import debounce from 'lodash.debounce';
 
-const API_KEY = 'AIzaSyAACgV5Ok9n-HsESqMo9d8cRGAiHFlOEAY'; // Certifique-se de substituir pela sua própria chave API
+const API_KEY = 'AIzaSyAACgV5Ok9n-HsESqMo9d8cRGAiHFlOEAY';
 
 const SearchScreen = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -11,34 +12,37 @@ const SearchScreen = ({ navigation }) => {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const fetchPlaces = async () => {
-    if (!searchQuery.trim()) {
-      alert('Por favor, insira um termo de pesquisa.');
-      return;
-    }
+  const fetchPlaces = useCallback(
+    debounce(async (query, city, state) => {
+      if (!query.trim()) return;
 
-    setLoading(true);
-    try {
-      let query = `${searchQuery}`;
-      if (city) query += ` in ${city}`;
-      if (state) query += `, ${state}`;
-      
-      console.log(`Iniciando pesquisa para: ${query}`);
-      const response = await axios.get(
-        `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${query}&key=${API_KEY}`
-      );
-      console.log('Resposta da API:', response.data);
-      if (response.data.status === 'OK') {
-        setResults(response.data.results);
-      } else {
-        console.error('Erro na resposta da API:', response.data.status);
-        alert(`Erro na pesquisa: ${response.data.status}`);
+      setLoading(true);
+      try {
+        let searchQuery = `${query}`;
+        if (city) searchQuery += ` in ${city}`;
+        if (state) searchQuery += `, ${state}`;
+
+        const response = await axios.get(
+          `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${searchQuery}&key=${API_KEY}`
+        );
+
+        if (response.data.status === 'OK') {
+          setResults(response.data.results);
+        } else {
+          alert(`Erro na pesquisa: ${response.data.status}`);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar locais:', error);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error('Erro ao buscar locais:', error);
-    } finally {
-      setLoading(false);
-    }
+    }, 300),
+    []
+  );
+
+  const handleSearchChange = (text) => {
+    setSearchQuery(text);
+    fetchPlaces(text, city, state);
   };
 
   const handleResultPress = (item) => {
@@ -47,10 +51,16 @@ const SearchScreen = ({ navigation }) => {
   };
 
   const renderItem = ({ item }) => (
-    <TouchableOpacity style={styles.resultItem} onPress={() => handleResultPress(item)}>
-      <Text style={styles.resultName}>{item.name}</Text>
-      <Text style={styles.resultAddress}>{item.formatted_address}</Text>
-    </TouchableOpacity>
+    <TouchableHighlight 
+      style={styles.resultItem}
+      onPress={() => handleResultPress(item)}
+      underlayColor="#DDDDDD"
+    >
+      <View>
+        <Text style={styles.resultName}>{item.name}</Text>
+        <Text style={styles.resultAddress}>{item.formatted_address}</Text>
+      </View>
+    </TouchableHighlight>
   );
 
   return (
@@ -60,7 +70,7 @@ const SearchScreen = ({ navigation }) => {
         style={styles.input}
         placeholder="Digite sua pesquisa..."
         value={searchQuery}
-        onChangeText={setSearchQuery}
+        onChangeText={handleSearchChange}
       />
       <TextInput
         style={styles.input}
@@ -74,7 +84,7 @@ const SearchScreen = ({ navigation }) => {
         value={state}
         onChangeText={setState}
       />
-      <Button title="Pesquisar" onPress={fetchPlaces} />
+      <Button title="Pesquisar" onPress={() => fetchPlaces(searchQuery, city, state)} />
       {loading ? (
         <ActivityIndicator size="large" color="#0000ff" style={styles.loadingIndicator} />
       ) : (
